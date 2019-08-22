@@ -3,7 +3,7 @@
 #include "sofa/sofa.h"
 #include "vsop87a_full.h"
 
-void rotvsop2J2000(double body[3]);
+void rotvsop2J2000_1(double body[3]);
 #define PI M_PI
 
 void simpleReduction(){
@@ -43,7 +43,7 @@ void simpleReduction(){
 	moon[1]-=earth[1];
 	moon[2]-=earth[2];
 
-	rotvsop2J2000(moon);
+	rotvsop2J2000_1(moon);
 
 	//Use UT1 for Earth Rotation Angle
 	double era=iauEra00(utc1,utc2);
@@ -101,7 +101,7 @@ void simpleReduction(){
 
 }
 
-void rotvsop2J2000(double body[3]){
+void rotvsop2J2000_1(double body[3]){
 	double a,b,c;
 	a = body[0] + body[1] * 0.000000440360 + body[2] * -0.000000190919;
 	b = body[0] * -0.000000479966 + body[1] * 0.917482137087 + body[2] * -0.397776982902;

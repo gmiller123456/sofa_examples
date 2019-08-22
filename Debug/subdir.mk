@@ -4,18 +4,24 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../astrolib.c \
 ../main.c \
 ../reductiontest1.c \
+../reductiontest2.c \
 ../vsop87a_full.c 
 
 OBJS += \
+./astrolib.o \
 ./main.o \
 ./reductiontest1.o \
+./reductiontest2.o \
 ./vsop87a_full.o 
 
 C_DEPS += \
+./astrolib.d \
 ./main.d \
 ./reductiontest1.d \
+./reductiontest2.d \
 ./vsop87a_full.d 
 
 

@@ -2,15 +2,13 @@
 #include <stdio.h>
 #include "sofa/sofa.h"
 #include "vsop87a_full.h"
-#include "reductiontest1.h"
+#include "reductiontest2.h"
 
 
 #define PI M_PI
 
-void simpleReduction();
-
 int main(int argc, char* args[]){
-	simpleReduction();
+	simpleReduction2();
 	return 0;
 }
 
