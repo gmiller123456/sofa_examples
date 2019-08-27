@@ -210,7 +210,6 @@ C_SRCS += \
 ../sofa/starpv.c \
 ../sofa/sxp.c \
 ../sofa/sxpv.c \
-../sofa/t_sofa_c.c \
 ../sofa/taitt.c \
 ../sofa/taiut1.c \
 ../sofa/taiutc.c \
@@ -453,7 +452,6 @@ OBJS += \
 ./sofa/starpv.o \
 ./sofa/sxp.o \
 ./sofa/sxpv.o \
-./sofa/t_sofa_c.o \
 ./sofa/taitt.o \
 ./sofa/taiut1.o \
 ./sofa/taiutc.o \
@@ -696,7 +694,6 @@ C_DEPS += \
 ./sofa/starpv.d \
 ./sofa/sxp.d \
 ./sofa/sxpv.d \
-./sofa/t_sofa_c.d \
 ./sofa/taitt.d \
 ./sofa/taiut1.d \
 ./sofa/taiutc.d \

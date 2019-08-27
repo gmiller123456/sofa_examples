@@ -4,17 +4,24 @@
 #include "vsop87a_full.h"
 #include "astrolib.h"
 
-void reductionTest(double utc1, double utc2, int bodyNum);
+void reductionTest(double utc1, double utc2, int bodyNum,
+		double expectedRA, double expectedDec, double expectedAz, double expectedAlt);
 
 void simpleReduction2(){
 	//convert Date to utc
 	double utc1,utc2;
-	iauDtf2d("UTC",2000,1,1,12,0,0,&utc1,&utc2);
 
-	reductionTest(utc1,utc2, BODY_MOON);
+	//[new Date(Date.UTC(2000,0, 1,12,0,0,0)),astrolib.MOON,38.2464000,274.236400,222.80147, -11.57774, 146.3255,  33.6752],
+	iauDtf2d("UTC",2000,1,1,12,0,0,&utc1,&utc2);
+	reductionTest(utc1,utc2, BODY_MOON,222.80147, -11.57774,146.3255,  33.6752);
+
+	//[new Date(Date.UTC(2020,3,11,16,0,0,0)),astrolib.MOON,38.2464000,274.236400,249.19588, -20.90403, 261.7692, -24.3259],
+	iauDtf2d("UTC",2020,4,11,16,0,0,&utc1,&utc2);
+	reductionTest(utc1,utc2, BODY_MOON,249.19588, -20.90403, 261.7692, -24.3259);
 }
 
-void reductionTest(double utc1, double utc2, int bodyNum){
+void reductionTest(double utc1, double utc2, int bodyNum,
+		double expectedRA, double expectedDec, double expectedAz, double expectedAlt){
 	//convert UTC to TAI
 	double atomic1,atomic2;
 	iauUtctai(utc1,utc2,&atomic1,&atomic2);
@@ -63,14 +70,15 @@ void reductionTest(double utc1, double utc2, int bodyNum){
 	//double x=body[0]*rnpb[0][0]+body[1]*rnpb[1][0]+body[2]*rnpb[2][0];
 	//double y=body[0]*rnpb[0][1]+body[1]*rnpb[1][1]+body[2]*rnpb[2][1];
 	//double z=body[0]*rnpb[0][2]+body[1]*rnpb[1][2]+body[2]*rnpb[2][2];
-	double x=body[0]*rnpb[0][0]+body[1]*rnpb[0][1]+body[2]*rnpb[0][2];
-	double y=body[0]*rnpb[1][0]+body[1]*rnpb[1][1]+body[2]*rnpb[1][2];
-	double z=body[0]*rnpb[2][0]+body[1]*rnpb[2][1]+body[2]*rnpb[2][2];
+	//double x=body[0]*rnpb[0][0]+body[1]*rnpb[0][1]+body[2]*rnpb[0][2];
+	//double y=body[0]*rnpb[1][0]+body[1]*rnpb[1][1]+body[2]*rnpb[1][2];
+	//double z=body[0]*rnpb[2][0]+body[1]*rnpb[2][1]+body[2]*rnpb[2][2];
 
-	body[0]=x;
-	body[1]=y;
-	body[2]=z;
+	//body[0]=x;
+	//body[1]=y;
+	//body[2]=z;
 
+	iauRxp(rnpb,body,body);
 
 	//Use UT1 for Earth Rotation Angle
 	double era=iauEra00(utc1,utc2);
@@ -80,6 +88,9 @@ void reductionTest(double utc1, double utc2, int bodyNum){
 	double lon=274.236400*PI/180.0;
 	double observerPV[2][3];
 	iauPvtob(lon,lat,0,0,0,0,era,observerPV);
+
+	iauTr(rnpb,rnpb);
+	iauRxpv(rnpb,observerPV,observerPV);
 
 	observerPV[0][0]/=1.49597870691E+11;
 	observerPV[0][1]/=1.49597870691E+11;
@@ -107,7 +118,7 @@ void reductionTest(double utc1, double utc2, int bodyNum){
 	dec=.5*PI-dec;
 
 	printf("Moon: %f %f\r\n",ra*180.0/PI,dec*180.0/PI);
-	printf("Diff: %f %f\r\n",ra*180.0/PI-222.79477,dec*180.0/PI-(-11.57495));
+	printf("Diff: %f %f\r\n",ra*180.0/PI-expectedRA,dec*180.0/PI-(expectedDec));
 
 	//Convert to altaz
 	//double GMST=iauGst06a(utc1,utc2,tt1,tt2);
@@ -127,7 +138,7 @@ void reductionTest(double utc1, double utc2, int bodyNum){
 	double az=Az;
 
 	printf("Alt Az: %f %f\r\n",alt*180.0/PI,az*180.0/PI);
-	printf("Diff  : %f %f\r\n",alt*180.0/PI-33.6752,az*180.0/PI-146.3255);
+	printf("Diff  : %f %f\r\n",alt*180.0/PI-expectedAlt,az*180.0/PI-expectedAz);
 
 
 }

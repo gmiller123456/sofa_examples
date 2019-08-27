@@ -1,4 +1,4 @@
 #ifndef REDUCTIONTEST2
 #define REDUCTIONTEST2
-	void simpleReduction();
+	void simpleReduction2();
 #endif
