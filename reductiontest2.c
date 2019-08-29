@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "sofa/sofa.h"
 #include "vsop87a_full.h"
+#include "vsop87a_full_velocities.h"
 #include "astrolib.h"
 
 void reductionTest(double utc1, double utc2, int bodyNum,
@@ -55,8 +56,12 @@ void reductionTest(double utc1, double utc2, int bodyNum,
 	body[1]-=earth[1];
 	body[2]-=earth[2];
 
+	double earthVelocity[3];
+	vsop87a_full_velocities_getEarth(et,earthVelocity);
+
 	//Convert VSOP87 coordinates to J2000
 	rotvsop2J2000(body);
+	rotvsop2J2000(earthVelocity);  //Need to add in Earth rotation component of observer velocity
 
 	//Get the precession, nutation, and bias matrix
 	double rnpb[3][3];
@@ -81,20 +86,26 @@ void reductionTest(double utc1, double utc2, int bodyNum,
 	iauRxp(rnpb,body,body);
 
 	//Use UT1 for Earth Rotation Angle
-	double era=iauEra00(utc1,utc2);
+	double era=iauEra00(utc1,utc2);  //Probably needs to be GAST since we're using the equinox method
 
 	//Get observer's xyz coordinates in J2000 coords
 	double lat=38.2464000*PI/180.0;
 	double lon=274.236400*PI/180.0;
 	double observerPV[2][3];
+	observerPV[1][0]=earthVelocity[0];
+	observerPV[1][1]=earthVelocity[1];
+	observerPV[1][2]=earthVelocity[2];
 	iauPvtob(lon,lat,0,0,0,0,era,observerPV);
 
 	iauTr(rnpb,rnpb);
 	iauRxpv(rnpb,observerPV,observerPV);
 
-	observerPV[0][0]/=1.49597870691E+11;
+	observerPV[0][0]/=1.49597870691E+11; //Convert meters to AU
 	observerPV[0][1]/=1.49597870691E+11;
 	observerPV[0][2]/=1.49597870691E+11;
+	observerPV[1][0]*=86400.0/1.49597870691E+11; //Convert meters/second to AU/day
+	observerPV[1][1]*=86400.0/1.49597870691E+11;
+	observerPV[1][2]*=86400.0/1.49597870691E+11;
 
 	/*
 	printf("Observer Position and Velocity:\r\n%2.10f %2.10f %2.10f\r\n%2.10f %2.10f %2.10f\r\n\r\n",
@@ -108,6 +119,32 @@ void reductionTest(double utc1, double utc2, int bodyNum,
 	body[1]-=observerPV[0][1];
 	body[2]-=observerPV[0][2];
 
+	//Light abberation
+	//TODO: Convert earthVelocity to units of c (convert AU/d to m/s)
+	double CR =  (149597870.7e3/299792458.0)/86400.0;
+	earthVelocity[0]*=CR;
+	earthVelocity[1]*=CR;
+	earthVelocity[2]*=CR;
+
+	double lengthV=sqrt(earthVelocity[0]*earthVelocity[0]+earthVelocity[1]*earthVelocity[1]+earthVelocity[2]*earthVelocity[2]);
+	double sunDistance=sqrt(earth[0]*earth[0]+earth[1]*earth[1]+earth[2]*earth[2]);
+	double bodyLen=sqrt(body[0]*body[0]+body[1]*body[1]+body[2]*body[2]);
+	double bodyUnitVector[3];
+	bodyUnitVector[0]=body[0]/bodyLen;
+	bodyUnitVector[1]=body[1]/bodyLen;
+	bodyUnitVector[2]=body[2]/bodyLen;
+	double lorenzFactor=sqrt(1-(lengthV*lengthV));
+	double bodyDirection[3];
+	iauAb(bodyUnitVector,earthVelocity,sunDistance,lorenzFactor,bodyDirection);
+
+	//body[0]=bodyDirection[0];
+	//body[1]=bodyDirection[1];
+	//body[2]=bodyDirection[2];
+
+
+
+	//TODO:  add the geocentric observer velocity to the heliocentric velocity
+
 	//Convert coords to polar, which gives RA/DEC
 	double r = sqrt(body[0] * body[0] + body[1] * body[1] + body[2] * body[2]);
 	double dec = acos(body[2] / r);
@@ -118,13 +155,12 @@ void reductionTest(double utc1, double utc2, int bodyNum,
 	dec=.5*PI-dec;
 
 	printf("Moon: %f %f\r\n",ra*180.0/PI,dec*180.0/PI);
-	printf("Diff: %f %f\r\n",ra*180.0/PI-expectedRA,dec*180.0/PI-(expectedDec));
+	printf("Diff: %15.10f %15.10f\r\n",ra*180.0/PI-expectedRA,dec*180.0/PI-(expectedDec));
 
 	//Convert to altaz
-	//double GMST=iauGst06a(utc1,utc2,tt1,tt2);
-	double GMST=iauGmst06(utc1,utc2,tt1,tt2);
+	double GAST=iauGst06a(utc1,utc2,tt1,tt2);
 
-	double h=GMST + lon - ra;
+	double h=GAST + lon - ra;
 
 	double sina=sin(dec)*sin(lat)+cos(dec)*cos(h)*cos(lat);
 	double a=asin(sina);
@@ -138,7 +174,7 @@ void reductionTest(double utc1, double utc2, int bodyNum,
 	double az=Az;
 
 	printf("Alt Az: %f %f\r\n",alt*180.0/PI,az*180.0/PI);
-	printf("Diff  : %f %f\r\n",alt*180.0/PI-expectedAlt,az*180.0/PI-expectedAz);
+	printf("Diff  : %15.10f %15.10f\r\n",alt*180.0/PI-expectedAlt,az*180.0/PI-expectedAz);
 
 
 }

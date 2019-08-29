@@ -1,3 +1,4 @@
+#include<stdio.h>
 #include "sofa.h"
 
 void iauAb(double pnat[3], double v[3], double s, double bm1,
