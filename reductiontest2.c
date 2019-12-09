@@ -19,10 +19,16 @@ void simpleReduction2(){
 	//[new Date(Date.UTC(2020,3,11,16,0,0,0)),astrolib.MOON,38.2464000,274.236400,249.19588, -20.90403, 261.7692, -24.3259],
 	iauDtf2d("UTC",2020,4,11,16,0,0,&utc1,&utc2);
 	reductionTest(utc1,utc2, BODY_MOON,249.19588, -20.90403, 261.7692, -24.3259);
+
+	//new Date(Date.UTC(2020,3,11,12,0,0,0)),astrolib.JUPITER,38.2464000,274.236400,297.26297, -21.16207, 176.5762,  30.5684;
+	iauDtf2d("UTC",2020,4,11,12,0,0,&utc1,&utc2);
+	reductionTest(utc1,utc2,BODY_JUPITER,297.26297, -21.16207, 176.5762,  30.5684);
 }
 
 void reductionTest(double utc1, double utc2, int bodyNum,
 		double expectedRA, double expectedDec, double expectedAz, double expectedAlt){
+
+	printf("Reductiontes2\r\n");
 	//convert UTC to TAI
 	double atomic1,atomic2;
 	iauUtctai(utc1,utc2,&atomic1,&atomic2);
@@ -66,22 +72,6 @@ void reductionTest(double utc1, double utc2, int bodyNum,
 	//Get the precession, nutation, and bias matrix
 	double rnpb[3][3];
 	iauPnm06a(tt1, tt2, rnpb);
-	//printf("NBP Matrix:\r\n%2.10f %2.10f %2.10f\r\n%2.10f %2.10f %2.10f\r\n%2.10f %2.10f %2.10f\r\n\r\n",
-	//		rnpb[0][0],rnpb[0][1],rnpb[0][2],
-	//		rnpb[1][0],rnpb[1][1],rnpb[1][2],
-	//		rnpb[2][0],rnpb[2][1],rnpb[2][2]
-	//		);
-
-	//double x=body[0]*rnpb[0][0]+body[1]*rnpb[1][0]+body[2]*rnpb[2][0];
-	//double y=body[0]*rnpb[0][1]+body[1]*rnpb[1][1]+body[2]*rnpb[2][1];
-	//double z=body[0]*rnpb[0][2]+body[1]*rnpb[1][2]+body[2]*rnpb[2][2];
-	//double x=body[0]*rnpb[0][0]+body[1]*rnpb[0][1]+body[2]*rnpb[0][2];
-	//double y=body[0]*rnpb[1][0]+body[1]*rnpb[1][1]+body[2]*rnpb[1][2];
-	//double z=body[0]*rnpb[2][0]+body[1]*rnpb[2][1]+body[2]*rnpb[2][2];
-
-	//body[0]=x;
-	//body[1]=y;
-	//body[2]=z;
 
 	iauRxp(rnpb,body,body);
 
@@ -103,9 +93,9 @@ void reductionTest(double utc1, double utc2, int bodyNum,
 	observerPV[0][0]/=1.49597870691E+11; //Convert meters to AU
 	observerPV[0][1]/=1.49597870691E+11;
 	observerPV[0][2]/=1.49597870691E+11;
-	observerPV[1][0]*=86400.0/1.49597870691E+11; //Convert meters/second to AU/day
-	observerPV[1][1]*=86400.0/1.49597870691E+11;
-	observerPV[1][2]*=86400.0/1.49597870691E+11;
+	//observerPV[1][0]*=86400.0/1.49597870691E+11; //Convert meters/second to AU/day
+	//observerPV[1][1]*=86400.0/1.49597870691E+11;
+	//observerPV[1][2]*=86400.0/1.49597870691E+11;
 
 	/*
 	printf("Observer Position and Velocity:\r\n%2.10f %2.10f %2.10f\r\n%2.10f %2.10f %2.10f\r\n\r\n",
@@ -137,9 +127,9 @@ void reductionTest(double utc1, double utc2, int bodyNum,
 	double bodyDirection[3];
 	iauAb(bodyUnitVector,earthVelocity,sunDistance,lorenzFactor,bodyDirection);
 
-	//body[0]=bodyDirection[0];
-	//body[1]=bodyDirection[1];
-	//body[2]=bodyDirection[2];
+	body[0]=bodyDirection[0];
+	body[1]=bodyDirection[1];
+	body[2]=bodyDirection[2];
 
 
 
@@ -154,7 +144,7 @@ void reductionTest(double utc1, double utc2, int bodyNum,
 	if(dec<0) dec+=2*PI;
 	dec=.5*PI-dec;
 
-	printf("Moon: %f %f\r\n",ra*180.0/PI,dec*180.0/PI);
+	printf("Body: %f %f\r\n",ra*180.0/PI,dec*180.0/PI);
 	printf("Diff: %15.10f %15.10f\r\n",ra*180.0/PI-expectedRA,dec*180.0/PI-(expectedDec));
 
 	//Convert to altaz
